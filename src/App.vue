@@ -8,6 +8,24 @@
   </div>
 </template>
 
+<script lang="ts">
+import Vue from "vue";
+import { mapActions, mapGetters } from "vuex";
+
+export default Vue.extend({
+  name: "Home",
+  computed: {
+    ...mapGetters(["ws", "clientId"]),
+  },
+  methods: {
+    ...mapActions(["initClientWs"]),
+  },
+  mounted() {
+    this.initClientWs();
+  },
+});
+</script>
+
 <style lang="scss">
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
