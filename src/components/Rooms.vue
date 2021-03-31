@@ -157,13 +157,22 @@ export default Vue.extend({
     },
     listenRoom() {
       this.debouncePlayers = false;
+      if (this.roomIdInput === this.roomId) return;
       this.loadingPlayers = true;
-      if (this.roomIdInput) {
+      if (this.roomIdInput && this.roomIdInput !== this.roomId) {
         let message: Message = {
           msgType: "connect_to_room_for_listen",
           roomId: this.roomIdInput,
         };
         this.sendMessage(message);
+      } else {
+        if (!this.roomIdInput && this.roomId) {
+          let message: Message = {
+            msgType: "disconnect_from_room",
+          };
+          this.sendMessage(message);
+        }
+        this.loadingPlayers = false;
       }
     },
   },
@@ -197,11 +206,13 @@ export default Vue.extend({
 .text-muted {
   color: gray;
 }
+
 .selected {
   background: #2c3e50;
   border-radius: 5px;
   color: white;
 }
+
 .alert {
   background: darkred;
 }
