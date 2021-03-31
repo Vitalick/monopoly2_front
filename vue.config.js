@@ -5,7 +5,7 @@ const BASE_URL_WS = "ws://127.0.0.1:8000/";
 module.exports = {
   transpileDependencies: ["vuetify"],
   devServer: {
-    port: "8070",
+    port: "8099",
     host: "0.0.0.0",
     hot: true,
     // disableHostCheck: true,
@@ -14,8 +14,8 @@ module.exports = {
         target: BASE_URL_WS,
         changeOrigin: true,
         logLevel: "debug",
-        ws: true
-      }
-    }
-  }
+        ws: true,
+      },
+    },
+  },
 };

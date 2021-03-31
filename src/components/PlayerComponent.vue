@@ -13,13 +13,7 @@
     </div>
     <div v-if="!forList">
       <div v-if="playerMy.username !== player.username">
-        <form
-          @submit.prevent="
-            toUser && toUser > 0 && toUser <= playerMy.money
-              ? user2user(player.username, toUser)
-              : null
-          "
-        >
+        <form @submit.prevent="user2user">
           <input
             type="number"
             min="1"
@@ -32,13 +26,7 @@
         </form>
       </div>
       <div v-if="playerMy.username === player.username">
-        <form
-          @submit.prevent="
-            toBank && toBank > 0 && toBank <= playerMy.money
-              ? user2bank(toBank)
-              : null
-          "
-        >
+        <form @submit.prevent="user2bank">
           <input
             type="number"
             min="1"
@@ -51,13 +39,7 @@
         </form>
       </div>
       <div v-if="playerMy.admin">
-        <form
-          @submit.prevent="
-            fromBank && fromBank > 0
-              ? bank2user(player.username, fromBank)
-              : null
-          "
-        >
+        <form @submit.prevent="bank2user">
           <input
             type="number"
             min="1"
@@ -72,23 +54,23 @@
 </template>
 
 <script lang="ts">
-import { Message, Player as PlayerT } from "@/interfaces/api";
+import { Message, Player } from "@/interfaces/api";
 import { mapActions, mapGetters } from "vuex";
 
 export default {
-  name: "Player",
+  name: "PlayerComponent",
   props: {
-    player: PlayerT,
+    player: Object as () => Player,
     forList: Boolean,
   },
   data() {
-    let toBank: number | null;
-    let fromBank: number | null;
-    let toUser: number | null;
+    let toBank: number | null = null;
+    let fromBank: number | null = null;
+    let toUser: number | null = null;
     return {
-      toBank,
-      fromBank,
-      toUser,
+      toBank: toBank,
+      fromBank: fromBank,
+      toUser: toUser,
     };
   },
   computed: {
@@ -96,47 +78,37 @@ export default {
   },
   methods: {
     ...mapActions(["sendMessage"]),
-    user2user(username: string, amount: number) {
+    user2user() {
+      if (!this.toUser || this.toUser <= 0 || this.toUser > this.playerMy.money)
+        return;
       let message: Message = {
         msgType: "user2user_money",
-        toUsername: username,
-        amount: amount,
+        toUsername: this.player.username,
+        amount: this.toUser,
       };
       this.sendMessage(message);
+      this.toUser = null;
     },
-    user2bank(amount: number) {
+    user2bank() {
+      if (!this.toBank || this.toBank <= 0 || this.toBank > this.playerMy.money)
+        return;
       let message: Message = {
         msgType: "user2bank_money",
-        amount: amount,
+        amount: this.toBank,
       };
       this.sendMessage(message);
+      this.toBank = null;
     },
-    bank2user(username: string, amount: number) {
+    bank2user() {
+      if (!this.fromBank || this.fromBank <= 0) return;
       let message: Message = {
         msgType: "bank2user_money",
-        toUsername: username,
-        amount: amount,
+        toUsername: this.player.username,
+        amount: this.fromBank,
       };
       this.sendMessage(message);
+      this.fromBank = null;
     },
   },
 };
 </script>
-
-<style scoped>
-div.player {
-  margin-top: 5px;
-}
-
-.title {
-  font-weight: bold;
-}
-
-.small {
-  font-size: 0.7rem;
-}
-
-.data {
-  margin-bottom: 10px;
-}
-</style>

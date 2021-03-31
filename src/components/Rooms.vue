@@ -1,45 +1,34 @@
 <template>
   <div class="rooms">
-    <h2>
+    <h3 class="text-gray text-medium">
+      Чтобы войти в игру, нужно выбрать доступную комнату или создать новую
+    </h3>
+    <h1 class="text-uppercase">
       {{ rooms && rooms.length ? "Доступные комнаты" : "Нет открытых комнат" }}
-    </h2>
-    <h3>
+    </h1>
+    <h3 class="text-gray text-medium">
       {{
         rooms && rooms.length
           ? "Выберите комнату или создайте новую"
           : "Создайте новую комнату"
       }}
     </h3>
+    <p>
+      <RadioButtons
+        v-if="rooms"
+        :options="roomsFormatted"
+        v-model="roomIdInput"
+      />
+    </p>
     <form @submit.prevent="canLogIn ? enterToRoom() : null">
-      <div v-if="rooms && rooms.length">
-        <div v-for="room in rooms" :key="room">
-          <label>
-            <input
-              type="radio"
-              name="room"
-              :value="`room_${room}`"
-              v-model="chosenRoom"
-              @click="roomIdInput = room"
-            />
-            {{ room }}
-          </label>
-        </div>
-      </div>
       <div>
         <div>
           <label>
             <input
-              type="radio"
-              name="room"
-              value="typed_room"
-              v-model="chosenRoom"
-            />
-            <input
               type="number"
-              v-model="roomIdInput"
+              v-model="roomIdInputNumber"
               min="1"
               placeholder="Номер комнаты"
-              @click="chosenRoom = 'typed_room'"
             />
           </label>
         </div>
@@ -52,7 +41,14 @@
             : "Создайте нового игрока"
         }}
       </h3>
-      <div v-if="playersInRoom && playersInRoom.length">
+      <div
+        v-if="
+          !loadingPlayers &&
+          !debouncePlayers &&
+          playersInRoom &&
+          playersInRoom.length
+        "
+      >
         <div v-for="player in playersInRoom" :key="player.username">
           <div
             :class="{
@@ -69,7 +65,7 @@
               v-model="chosenUsername"
               @click="!player.clientId ? (username = player.username) : null"
             />
-            <Player :player="player" for-list></Player>
+            <PlayerComponent :player="player" for-list></PlayerComponent>
           </div>
         </div>
       </div>
@@ -98,7 +94,9 @@
         </div>
       </div>
       <div>
-        <button :disabled="!canLogIn" type="submit">Войти в комнату</button>
+        <button :disabled="!canLogIn" class="btn btn-black" type="submit">
+          Войти в комнату
+        </button>
       </div>
     </form>
   </div>
@@ -109,37 +107,54 @@ import Vue from "vue";
 import { mapActions, mapGetters } from "vuex";
 import { Message, Player as PlayerT } from "@/interfaces/api";
 import { debounce } from "lodash";
-import Player from "@/components/Player.vue";
+import PlayerComponent from "@/components/PlayerComponent.vue";
+import RadioButtons from "@/components/RadioButtons.vue";
 
 export default Vue.extend({
   name: "Rooms",
-  components: { Player },
+  components: { RadioButtons, PlayerComponent },
   // props: {
   //   msg: String,
   // },
   data: () => {
-    let roomIdInput: number | undefined;
+    let roomIdInput: number | null = null;
     let username = "";
     let chosenRoom = "typed_room";
     let chosenUsername = "typed_player";
-    return {
+    const out = {
       debouncePlayers: false,
       loadingPlayers: false,
-      chosenRoom,
       chosenUsername,
       roomIdInput,
       username,
     };
+    return out;
   },
   computed: {
     ...mapGetters(["rooms", "nowStatus", "playersInRoom", "roomId"]),
+    roomIdInputNumber: {
+      get() {
+        return this.roomIdInput;
+      },
+      set(val) {
+        this.roomIdInput = val ? Number(val) : null;
+      },
+    },
     rightUsername() {
       return !this.playersInRoom.find(
         (x: PlayerT) => x.username === this.username && x.clientId
       );
     },
     canLogIn() {
-      return this.roomIdInput && this.rightUsername && !this.loadingPlayers;
+      return (
+        this.roomIdInput &&
+        this.username &&
+        this.rightUsername &&
+        !this.loadingPlayers
+      );
+    },
+    roomsFormatted() {
+      return this.rooms.map((val) => ({ title: val.toString(), value: val }));
     },
   },
   methods: {
@@ -200,20 +215,3 @@ export default Vue.extend({
   },
 });
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped lang="scss">
-.text-muted {
-  color: gray;
-}
-
-.selected {
-  background: #2c3e50;
-  border-radius: 5px;
-  color: white;
-}
-
-.alert {
-  background: darkred;
-}
-</style>
