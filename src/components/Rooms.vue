@@ -119,7 +119,6 @@ export default Vue.extend({
   data: () => {
     let roomIdInput: number | null = null;
     let username = "";
-    let chosenRoom = "typed_room";
     let chosenUsername = "typed_player";
     const out = {
       debouncePlayers: false,
